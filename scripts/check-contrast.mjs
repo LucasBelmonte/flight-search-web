@@ -25,6 +25,7 @@ const TOKENS = {
   surface: '#FFFFFF',
   'ink-muted': '#4A4A4A',
   danger: '#B3261E',
+  'danger-surface': '#FDF2F1',
 };
 
 /**
@@ -42,6 +43,8 @@ const PAIRS = [
   { name: 'anel de foco', fg: 'brand-700', bg: 'surface', kind: 'ui' },
   { name: 'borda de input e ícone decorativo', fg: 'brand-600', bg: 'surface', kind: 'ui' },
   { name: 'mensagem de erro', fg: 'danger', bg: 'surface', kind: 'text' },
+  { name: 'texto do bloco de erro', fg: 'ink', bg: 'danger-surface', kind: 'text' },
+  { name: 'borda do bloco de erro', fg: 'danger', bg: 'danger-surface', kind: 'ui' },
 ];
 
 /** Combinações proibidas por medição — se aparecerem no código, é bug. */

@@ -6,6 +6,12 @@ import { AirportCombobox } from './airport-combobox';
 
 type TripType = 'one_way' | 'round_trip';
 
+/** Campos que podem ter erro próprio, ligados ao input por aria-describedby. */
+type FieldKey = 'origin' | 'destination' | 'departure' | 'return';
+
+/** Ordem de leitura do resumo de erros — a mesma ordem visual do formulário. */
+const FIELD_ORDER: FieldKey[] = ['origin', 'destination', 'departure', 'return'];
+
 /**
  * Formulário de busca: origem, destino, datas e passageiros.
  *
@@ -52,14 +58,16 @@ type TripType = 'one_way' | 'round_trip';
         <fs-airport-combobox
           label="Origem"
           inputId="origin"
-          [invalid]="showErrors() && !origin()"
+          [invalid]="hasError('origin')"
+          [errorId]="errorId('origin')"
           [(value)]="origin"
         />
 
         <fs-airport-combobox
           label="Destino"
           inputId="destination"
-          [invalid]="showErrors() && (!destination() || sameAirport())"
+          [invalid]="hasError('destination')"
+          [errorId]="errorId('destination')"
           [(value)]="destination"
         />
       </div>
@@ -72,7 +80,8 @@ type TripType = 'one_way' | 'round_trip';
             type="date"
             [min]="today"
             [value]="departureDate()"
-            [attr.aria-invalid]="showErrors() && !departureDate() ? 'true' : null"
+            [attr.aria-invalid]="hasError('departure') ? 'true' : null"
+            [attr.aria-describedby]="errorId('departure')"
             (change)="onDeparture($event)"
           />
         </div>
@@ -85,7 +94,8 @@ type TripType = 'one_way' | 'round_trip';
               type="date"
               [min]="departureDate() || today"
               [value]="returnDate()"
-              [attr.aria-invalid]="showErrors() && !returnDate() ? 'true' : null"
+              [attr.aria-invalid]="hasError('return') ? 'true' : null"
+              [attr.aria-describedby]="errorId('return')"
               (change)="onReturn($event)"
             />
           </div>
@@ -129,12 +139,14 @@ type TripType = 'one_way' | 'round_trip';
         </div>
       </fieldset>
 
-      @if (showErrors() && errors().length) {
+      @if (showErrors() && errorList().length) {
         <div class="errors" role="alert">
           <p>Corrija antes de buscar:</p>
           <ul>
-            @for (error of errors(); track error) {
-              <li>{{ error }}</li>
+            @for (error of errorList(); track error.field) {
+              <!-- O id aqui é o alvo do aria-describedby do campo correspondente:
+                   é o que faz o leitor de tela ler o motivo junto com "inválido". -->
+              <li [id]="error.id">{{ error.message }}</li>
             }
           </ul>
         </div>
@@ -151,7 +163,16 @@ export class SearchForm {
    */
   readonly searchSubmit = output<FlightSearchCriteria>();
 
-  protected readonly today = new Date().toISOString().slice(0, 10);
+  /**
+   * Data de hoje no fuso do usuário, não em UTC.
+   *
+   * `toISOString().slice(0, 10)` devolveria a data UTC: às 21h de São Paulo já
+   * seria o dia seguinte, e o formulário bloquearia a busca de um voo que parte
+   * ainda hoje de madrugada. `en-CA` formata como YYYY-MM-DD, que é o formato
+   * que o input `type=date` espera.
+   */
+  protected readonly today = new Date().toLocaleDateString('en-CA');
+
   protected readonly cabinOptions = (Object.keys(CABIN_LABELS) as CabinClass[]).map((value) => ({
     value,
     label: CABIN_LABELS[value],
@@ -173,24 +194,64 @@ export class SearchForm {
     () => Boolean(this.origin()) && this.origin() === this.destination(),
   );
 
-  protected readonly errors = computed<string[]>(() => {
-    const list: string[] = [];
+  /**
+   * Erros indexados pelo campo que os causou.
+   *
+   * Indexar por campo, e não só acumular uma lista, é o que permite ligar cada
+   * mensagem ao seu input por `aria-describedby`. Sem esse vínculo, quem usa
+   * leitor de tela ouve "inválido" ao tabular e precisa caçar o motivo no bloco
+   * de erros lá embaixo.
+   */
+  protected readonly fieldErrors = computed<Partial<Record<FieldKey, string>>>(() => {
+    const errors: Partial<Record<FieldKey, string>> = {};
 
-    if (!this.origin()) list.push('Escolha o aeroporto de origem.');
-    if (!this.destination()) list.push('Escolha o aeroporto de destino.');
-    if (this.sameAirport()) list.push('A origem e o destino precisam ser diferentes.');
-    if (!this.departureDate()) list.push('Escolha a data de ida.');
+    if (!this.origin()) {
+      errors.origin = 'Escolha o aeroporto de origem.';
+    }
+
+    if (!this.destination()) {
+      errors.destination = 'Escolha o aeroporto de destino.';
+    } else if (this.sameAirport()) {
+      errors.destination = 'A origem e o destino precisam ser diferentes.';
+    }
+
+    if (!this.departureDate()) {
+      errors.departure = 'Escolha a data de ida.';
+    } else if (this.departureDate() < this.today) {
+      // O input `type=date` aceita digitação e o formulário é `novalidate`, então
+      // o atributo `min` sozinho não impede o envio. Sem esta checagem a API
+      // devolveria 422 — uma ida e volta à rede por algo verificável aqui.
+      errors.departure = 'A ida precisa ser hoje ou uma data futura.';
+    }
 
     if (this.tripType() === 'round_trip') {
       if (!this.returnDate()) {
-        list.push('Escolha a data de volta.');
+        errors.return = 'Escolha a data de volta.';
       } else if (this.departureDate() && this.returnDate() < this.departureDate()) {
-        list.push('A volta precisa ser depois da ida.');
+        errors.return = 'A volta precisa ser depois da ida.';
       }
     }
 
-    return list;
+    return errors;
   });
+
+  /** Os mesmos erros em ordem de leitura, para o resumo do topo. */
+  protected readonly errorList = computed(() =>
+    FIELD_ORDER.filter((field) => this.fieldErrors()[field]).map((field) => ({
+      field,
+      id: `error-${field}`,
+      message: this.fieldErrors()[field] as string,
+    })),
+  );
+
+  protected hasError(field: FieldKey): boolean {
+    return this.showErrors() && Boolean(this.fieldErrors()[field]);
+  }
+
+  /** Id da mensagem deste campo, ou null quando ele não tem erro visível. */
+  protected errorId(field: FieldKey): string | null {
+    return this.hasError(field) ? `error-${field}` : null;
+  }
 
   protected onDeparture(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
@@ -221,7 +282,7 @@ export class SearchForm {
     event.preventDefault();
     this.showErrors.set(true);
 
-    if (this.errors().length > 0) return;
+    if (this.errorList().length > 0) return;
 
     this.searchSubmit.emit({
       origin: this.origin(),

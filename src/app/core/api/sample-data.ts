@@ -151,12 +151,21 @@ export const SAMPLE_AIRPORTS: Airport[] = [
   },
 ];
 
+/**
+ * Minúsculas sem acento, para que "brasilia" ache "Brasília".
+ *
+ * Definida uma vez no módulo de propósito: quando estava repetida inline, mudar
+ * a regra num lugar e esquecer o outro fazia o termo digitado deixar de casar
+ * com os campos comparados.
+ */
+function normalize(text: string): string {
+  return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 export function searchSampleAirports(term: string, limit = 10): Airport[] {
-  const q = term.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const q = normalize(term.trim());
 
   if (q.length < 2) return [];
-
-  const normalize = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
   return (
     SAMPLE_AIRPORTS.filter(
@@ -173,6 +182,25 @@ export function searchSampleAirports(term: string, limit = 10): Airport[] {
       })
       .slice(0, limit)
   );
+}
+
+/** Fuso fictício dos voos de exemplo: horário de Brasília. */
+const OFFSET_LABEL = '-03:00';
+const OFFSET_MINUTES = -180;
+
+/** Espera em conexão, em minutos. */
+const LAYOVER_MINUTES = 55;
+
+/**
+ * Formata um instante como ISO 8601 já no fuso `OFFSET_LABEL`.
+ *
+ * `toISOString().replace('Z', '-03:00')` parece fazer isso e faz o oposto: pega
+ * a hora em UTC e apenas a rotula com outro fuso, adiantando tudo em 3 horas —
+ * o suficiente para um voo das 21h aparecer chegando no dia seguinte. É preciso
+ * deslocar o instante antes de formatar.
+ */
+function isoInOffset(epochMs: number): string {
+  return new Date(epochMs + OFFSET_MINUTES * 60_000).toISOString().slice(0, 19) + OFFSET_LABEL;
 }
 
 const CARRIERS = [
@@ -210,47 +238,19 @@ export function buildSampleOffers(criteria: FlightSearchCriteria): FlightSearchR
     const depHour = 5 + ((seed + i * 3) % 17);
     const depIso = `${criteria.departure_date}T${String(depHour).padStart(2, '0')}:${
       i % 2 ? '35' : '05'
-    }:00-03:00`;
+    }:00${OFFSET_LABEL}`;
 
-    const arrival = new Date(new Date(depIso).getTime() + legMinutes * 60_000);
-    const arrIso = arrival.toISOString().replace('Z', '-03:00');
-
-    const outbound = {
-      duration_minutes: legMinutes,
-      segments: buildSegments(
-        criteria.origin,
-        criteria.destination,
-        depIso,
-        arrIso,
-        stops,
-        carrier,
-        legMinutes,
-        i,
-      ),
-    };
-
-    const itineraries = [outbound];
+    const itineraries = [
+      buildLeg(criteria.origin, criteria.destination, depIso, stops, legMinutes, carrier, i),
+    ];
 
     if (roundTrip && criteria.return_date) {
       const retHour = 8 + ((seed + i * 5) % 12);
-      const retDep = `${criteria.return_date}T${String(retHour).padStart(2, '0')}:20:00-03:00`;
-      const retArr = new Date(new Date(retDep).getTime() + legMinutes * 60_000)
-        .toISOString()
-        .replace('Z', '-03:00');
+      const retDep = `${criteria.return_date}T${String(retHour).padStart(2, '0')}:20:00${OFFSET_LABEL}`;
 
-      itineraries.push({
-        duration_minutes: legMinutes,
-        segments: buildSegments(
-          criteria.destination,
-          criteria.origin,
-          retDep,
-          retArr,
-          stops,
-          carrier,
-          legMinutes,
-          i + 1,
-        ),
-      });
+      itineraries.push(
+        buildLeg(criteria.destination, criteria.origin, retDep, stops, legMinutes, carrier, i + 1),
+      );
     }
 
     return {
@@ -275,52 +275,53 @@ export function buildSampleOffers(criteria: FlightSearchCriteria): FlightSearchR
   };
 }
 
-function buildSegments(
+/**
+ * Monta um trecho completo e deriva a duração dos próprios segmentos.
+ *
+ * Declarar a duração separadamente, como era antes, produzia cards onde o tempo
+ * no meio não batia com a diferença entre as pontas — em voo com conexão a
+ * espera no aeroporto ficava de fora da conta.
+ */
+function buildLeg(
   origin: string,
   destination: string,
   departIso: string,
-  arriveIso: string,
   stops: number,
+  flightMinutes: number,
   carrier: { code: string; name: string },
-  totalMinutes: number,
   salt: number,
-): FlightOffer['itineraries'][number]['segments'] {
-  const HUBS = ['GRU', 'CNF', 'LIS', 'MAD', 'PTY'].filter((h) => h !== origin && h !== destination);
+): FlightOffer['itineraries'][number] {
+  const hubs = ['GRU', 'CNF', 'LIS', 'MAD', 'PTY'].filter((h) => h !== origin && h !== destination);
+  const waypoints = [origin, ...hubs.slice(0, stops), destination];
+  const legs = waypoints.length - 1;
 
-  if (stops === 0) {
-    return [
-      {
-        origin,
-        destination,
-        departure_at: departIso,
-        arrival_at: arriveIso,
-        carrier_code: carrier.code,
-        carrier_name: carrier.name,
-        flight_number: String(1000 + ((salt * 37) % 8000)),
-        aircraft: 'Airbus A320',
-        duration_minutes: totalMinutes,
-      },
-    ];
-  }
+  const perLeg = Math.floor(flightMinutes / legs);
+  const start = Date.parse(departIso);
 
-  const waypoints = [origin, ...HUBS.slice(0, stops), destination];
-  const legMinutes = Math.floor(totalMinutes / (waypoints.length - 1));
-  const start = new Date(departIso).getTime();
-
-  return waypoints.slice(0, -1).map((from, idx) => {
-    const legStart = new Date(start + idx * (legMinutes + 55) * 60_000);
-    const legEnd = new Date(legStart.getTime() + legMinutes * 60_000);
+  const segments = waypoints.slice(0, -1).map((from, idx) => {
+    const legStart = start + idx * (perLeg + LAYOVER_MINUTES) * 60_000;
+    const legEnd = legStart + perLeg * 60_000;
 
     return {
       origin: from,
       destination: waypoints[idx + 1],
-      departure_at: legStart.toISOString().replace('Z', '-03:00'),
-      arrival_at: legEnd.toISOString().replace('Z', '-03:00'),
+      departure_at: isoInOffset(legStart),
+      arrival_at: isoInOffset(legEnd),
       carrier_code: carrier.code,
       carrier_name: carrier.name,
       flight_number: String(1000 + ((salt * 37 + idx * 11) % 8000)),
       aircraft: idx % 2 ? 'Boeing 737' : 'Airbus A320',
-      duration_minutes: legMinutes,
+      duration_minutes: perLeg,
     };
   });
+
+  const first = segments[0];
+  const last = segments[segments.length - 1];
+
+  return {
+    duration_minutes: Math.round(
+      (Date.parse(last.arrival_at) - Date.parse(first.departure_at)) / 60_000,
+    ),
+    segments,
+  };
 }

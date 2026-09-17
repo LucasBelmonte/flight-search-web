@@ -98,7 +98,7 @@ legend {
 .errors {
   padding: var(--space-3) var(--space-4);
   border-left: 4px solid var(--danger);
-  background: #fdf2f1;
+  background: var(--danger-surface);
   border-radius: var(--radius-sm);
   color: var(--ink);
 

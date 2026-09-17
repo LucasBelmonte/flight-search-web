@@ -2,7 +2,7 @@ import { httpResource } from '@angular/common/http';
 import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 
 import { API_CONFIG } from './api.config';
-import type { Airport, FlightSearchCriteria, FlightSearchResponse } from './models';
+import type { AirportSearchResponse, FlightSearchCriteria, FlightSearchResponse } from './models';
 import { buildSampleOffers, searchSampleAirports } from './sample-data';
 
 /**
@@ -63,12 +63,12 @@ export class FlightSearchService {
    * A busca é feita na tabela local da API, não em provider externo, então pode
    * ser chamada a cada tecla sem consumir quota paga.
    */
-  airportResource(term: Signal<string>): ReadonlyResource<{ data: Airport[] }> {
+  airportResource(term: Signal<string>): ReadonlyResource<AirportSearchResponse> {
     if (this.config.useSampleData) {
       return this.sampleAirportResource(term);
     }
 
-    return httpResource<{ data: Airport[] }>(() => {
+    return httpResource<AirportSearchResponse>(() => {
       const q = term().trim();
       if (q.length < 2) return undefined;
 
@@ -102,8 +102,8 @@ export class FlightSearchService {
     };
   }
 
-  private sampleAirportResource(term: Signal<string>): ReadonlyResource<{ data: Airport[] }> {
-    const value = computed<{ data: Airport[] } | undefined>(() => {
+  private sampleAirportResource(term: Signal<string>): ReadonlyResource<AirportSearchResponse> {
+    const value = computed<AirportSearchResponse | undefined>(() => {
       const q = term().trim();
       return q.length < 2 ? undefined : { data: searchSampleAirports(q) };
     });
