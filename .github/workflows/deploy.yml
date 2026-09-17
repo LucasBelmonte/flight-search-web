@@ -1,0 +1,74 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # permite publicar manualmente pela aba Actions
+
+# Permissões mínimas para publicar no Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez; um push novo cancela o anterior que ainda estiver na fila.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build de produção
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+
+      - run: npm ci
+
+      # Os mesmos portões do CI. Deploy não é atalho para pular qualidade:
+      # site no ar com contraste reprovando é pior que site não publicado.
+      - name: Lint
+        run: npm run lint
+
+      - name: Contraste WCAG AA nos dois temas
+        run: npm run check:contrast
+
+      - name: Testes
+        run: npm run test
+
+      # O Pages serve o projeto em /<nome-do-repo>/, então o base-href precisa
+      # apontar para lá — senão todo asset resolve para a raiz do domínio e a
+      # página carrega em branco.
+      - name: Build
+        run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
+
+      # A SPA usa rotas do lado do cliente. O Pages é um servidor estático: ao
+      # abrir /algum-caminho direto ele procura um arquivo que não existe e
+      # devolve 404. Servir o index como página de erro faz o roteador assumir.
+      - name: Fallback de rota para SPA
+        run: cp dist/flight-search-web/browser/index.html dist/flight-search-web/browser/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/flight-search-web/browser
+
+  deploy:
+    name: Publicar
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
