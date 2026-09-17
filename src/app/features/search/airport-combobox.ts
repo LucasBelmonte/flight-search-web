@@ -2,12 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  ElementRef,
   inject,
   input,
   model,
   signal,
-  viewChild,
 } from '@angular/core';
 
 import { FlightSearchService } from '../../core/api/flight-search.service';
@@ -40,7 +38,7 @@ import type { Airport } from '../../core/api/models';
         [attr.aria-expanded]="isOpen()"
         [attr.aria-controls]="listboxId()"
         [attr.aria-activedescendant]="activeOptionId()"
-        [attr.aria-describedby]="hintId()"
+        [attr.aria-describedby]="describedBy()"
         [attr.aria-invalid]="invalid() ? 'true' : null"
         [value]="displayValue()"
         (input)="onType($event)"
@@ -69,9 +67,10 @@ import type { Airport } from '../../core/api/models';
               </span>
             </li>
           } @empty {
-            <li role="option" aria-selected="false" class="empty" aria-disabled="true">
-              Nenhum aeroporto encontrado.
-            </li>
+            <!-- role="presentation": "nenhum resultado" não é uma opção
+                 escolhível. Como role="option" o leitor de tela anunciaria
+                 "opção 1 de 1" e ofereceria para seleção algo que não existe. -->
+            <li role="presentation" class="empty">Nenhum aeroporto encontrado.</li>
           }
         </ul>
       }
@@ -83,16 +82,32 @@ export class AirportCombobox {
   readonly inputId = input.required<string>();
   readonly invalid = input(false);
 
+  /**
+   * Id da mensagem de erro que descreve este campo, quando houver.
+   *
+   * Sem isso, marcar o campo como `aria-invalid` anuncia "inválido" e mais nada:
+   * quem usa leitor de tela ouve que errou, mas não o quê.
+   */
+  readonly errorId = input<string | null>(null);
+
   /** Código IATA escolhido. Vazio enquanto o usuário não escolher uma opção. */
   readonly value = model<string>('');
 
   private readonly api = inject(FlightSearchService);
-  private readonly inputEl = viewChild.required<ElementRef<HTMLInputElement>>('inputEl');
 
   /** O que está digitado. Só vira `value` quando uma opção é de fato escolhida. */
   private readonly term = signal('');
-  private readonly focused = signal(false);
   private readonly chosen = signal<Airport | undefined>(undefined);
+
+  /**
+   * "Popup aberto" é estado próprio, separado de "input tem foco".
+   *
+   * Derivar a abertura do foco parece natural e está errado: escolher uma opção
+   * e apertar Esc fecham a lista sem que o input perca o foco de verdade, então
+   * um `focused` compartilhado ficaria preso em false e a lista nunca reabriria
+   * quando o usuário voltasse a digitar.
+   */
+  private readonly open = signal(false);
 
   protected readonly activeIndex = signal(-1);
 
@@ -101,7 +116,7 @@ export class AirportCombobox {
   protected readonly options = computed<Airport[]>(() => this.airports.value()?.data ?? []);
 
   protected readonly isOpen = computed(
-    () => this.focused() && this.term().trim().length >= 2 && !this.chosen(),
+    () => this.open() && this.term().trim().length >= 2 && !this.chosen(),
   );
 
   protected readonly displayValue = computed(() => {
@@ -111,6 +126,14 @@ export class AirportCombobox {
 
   protected readonly listboxId = computed(() => `${this.inputId()}-listbox`);
   protected readonly hintId = computed(() => `${this.inputId()}-hint`);
+
+  /**
+   * A dica sempre descreve o campo; o erro entra na frente quando existe, porque
+   * é a informação mais urgente para quem acabou de tentar enviar o formulário.
+   */
+  protected readonly describedBy = computed(() =>
+    [this.errorId(), this.hintId()].filter(Boolean).join(' '),
+  );
 
   /**
    * O leitor de tela lê a opção apontada por aria-activedescendant. Sem isso o
@@ -131,16 +154,26 @@ export class AirportCombobox {
     this.chosen.set(undefined);
     this.value.set('');
     this.activeIndex.set(-1);
+
+    // Digitar sempre reabre: é o gesto de quem quer trocar o aeroporto já escolhido.
+    this.open.set(true);
   }
 
   protected onFocus(): void {
-    this.focused.set(true);
+    this.open.set(true);
   }
 
   protected onBlur(): void {
     // mousedown na opção dispara antes do blur, então a escolha já aconteceu aqui.
-    this.focused.set(false);
+    this.open.set(false);
     this.activeIndex.set(-1);
+
+    // Texto digitado sem escolher opção não pode ficar na tela: o campo mostraria
+    // "GRU" enquanto o valor está vazio, e o usuário leria "escolha a origem" sem
+    // entender o motivo. Limpar mantém uma só fonte de verdade.
+    if (!this.chosen()) {
+      this.term.set('');
+    }
   }
 
   protected choose(airport: Airport, event?: Event): void {
@@ -149,7 +182,7 @@ export class AirportCombobox {
     this.value.set(airport.iata_code);
     this.term.set('');
     this.activeIndex.set(-1);
-    this.focused.set(false);
+    this.open.set(false);
   }
 
   protected onKeydown(event: KeyboardEvent): void {
@@ -158,7 +191,16 @@ export class AirportCombobox {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        if (!this.isOpen() || total === 0) return;
+
+        // Com a lista fechada, ↓ abre — é o que o padrão ARIA APG exige, e sem
+        // isso quem apertou Esc fica sem forma de reabrir usando só o teclado.
+        if (!this.isOpen()) {
+          this.open.set(true);
+          this.activeIndex.set(0);
+          return;
+        }
+
+        if (total === 0) return;
         this.activeIndex.update((i) => (i + 1) % total);
         break;
 
@@ -180,9 +222,10 @@ export class AirportCombobox {
       case 'Escape':
         if (this.isOpen()) {
           event.preventDefault();
-          this.focused.set(false);
+          this.open.set(false);
           this.activeIndex.set(-1);
-          this.inputEl().nativeElement.focus(); // foco volta ao campo, nunca se perde
+          // O foco nunca saiu do input — fechar a lista não o move. Digitar de
+          // novo, ou ↓, reabre.
         }
         break;
 

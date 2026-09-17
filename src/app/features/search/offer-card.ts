@@ -23,7 +23,7 @@ import type { FlightOffer } from '../../core/api/models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './offer-card.scss',
   template: `
-    <article [attr.aria-labelledby]="headingId()">
+    <article [attr.aria-label]="cardLabel()">
       @if (cheapest()) {
         <p class="badge">
           <span aria-hidden="true">★</span>
@@ -76,7 +76,7 @@ import type { FlightOffer } from '../../core/api/models';
         </div>
 
         <div class="price">
-          <p [id]="headingId()" class="amount">{{ price() }}</p>
+          <p class="amount">{{ price() }}</p>
           <p class="note">Total para {{ passengersLabel() }}</p>
 
           @if (offer().seats_remaining !== null && offer().seats_remaining !== undefined) {
@@ -97,7 +97,27 @@ export class OfferCard {
   readonly cheapest = input(false);
   readonly passengers = input(1);
 
-  protected readonly headingId = computed(() => `offer-price-${this.offer().id}`);
+  /**
+   * Nome acessível do cartão: rota, horário e preço.
+   *
+   * Rotular o artigo apenas pelo preço — que era o caso — faz cada oferta se
+   * anunciar como "R$ 1.234,56" quando alguém navega de região em região, sem
+   * dizer de que voo se trata antes de entrar no conteúdo.
+   */
+  protected readonly cardLabel = computed(() => {
+    const outbound = this.offer().itineraries[0];
+    const first = outbound.segments[0];
+    const last = outbound.segments[outbound.segments.length - 1];
+
+    const stops = formatStops(stopCount(outbound.segments.length));
+
+    return (
+      `Voo de ${first.origin} para ${last.destination}, ` +
+      `partida às ${formatLocalTime(first.departure_at)}, ` +
+      `${formatDurationAccessible(outbound.duration_minutes)}, ${stops}, ` +
+      `${this.price()}`
+    );
+  });
 
   protected readonly price = computed(() => formatPrice(this.offer().price, this.offer().currency));
 

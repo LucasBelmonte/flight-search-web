@@ -15,6 +15,14 @@ header {
   padding-block: var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface);
+
+  .shell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
 }
 
 .brand {
@@ -22,7 +30,7 @@ header {
   align-items: center;
   gap: var(--space-2);
   min-height: var(--touch-target);
-  color: var(--ink);
+  color: var(--text);
   text-decoration: none;
   font-weight: 800;
   font-size: 1.125rem;
@@ -41,8 +49,8 @@ header {
   border-radius: var(--radius-md);
 
   /* Marca: verde de fundo com o símbolo em preto — 9.64:1. */
-  background: var(--brand-500);
-  color: var(--ink);
+  background: var(--accent-surface);
+  color: var(--on-accent);
   font-size: 1.125rem;
 }
 
@@ -64,6 +72,6 @@ footer {
 
   p {
     font-size: 0.875rem;
-    color: var(--ink-muted); /* 8.86:1 sobre branco */
+    color: var(--text-muted); /* 8.86:1 sobre branco */
   }
 }

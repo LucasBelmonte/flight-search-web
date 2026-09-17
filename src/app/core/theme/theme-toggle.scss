@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.group {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  /* O alvo de toque de 44px vem do padding vertical; o grupo inteiro fica
+     compacto no cabeçalho sem sacrificar a área clicável. */
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  /* A opção ativa usa o verde da marca como fundo com texto preto — 9.64:1 nos
+     dois temas, porque --on-accent é preto em ambos. Marcar só com cor seria
+     insuficiente, então aria-checked carrega a informação de verdade. */
+  &.selected {
+    background: var(--accent-surface);
+    color: var(--on-accent);
+  }
+}
+
+.icon {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+/* Em telas estreitas ficam só os ícones; o nome continua disponível pelo
+   title e, para leitor de tela, pelo conteúdo do botão. */
+@media (max-width: 30rem) {
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  button {
+    padding-inline: var(--space-3);
+  }
+}

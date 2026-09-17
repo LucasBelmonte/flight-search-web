@@ -11,17 +11,17 @@ h1 {
 .lead {
   margin-top: var(--space-2);
   margin-bottom: var(--space-6);
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .sample-warning {
   margin-bottom: var(--space-6);
   padding: var(--space-3) var(--space-4);
-  border-left: 4px solid var(--brand-600);
+  border-left: 4px solid var(--border-interactive);
   background: var(--surface-sunken);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .status {
@@ -66,9 +66,9 @@ h1 {
   select {
     min-height: var(--touch-target);
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-interactive);
     border-radius: var(--radius-md);
-    background: var(--surface);
+    background: var(--surface-raised);
 
     &:focus-visible {
       outline: var(--focus-ring);
@@ -88,27 +88,27 @@ h1 {
 .feedback {
   padding: var(--space-8) var(--space-4);
   text-align: center;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   background: var(--surface-sunken);
   border-radius: var(--radius-lg);
 
   &.error {
-    color: var(--ink);
+    color: var(--text);
   }
 
   button {
     margin-top: var(--space-3);
     min-height: var(--touch-target);
     padding: var(--space-2) var(--space-6);
-    background: var(--brand-500);
-    color: var(--ink);
+    background: var(--accent-surface);
+    color: var(--on-accent);
     border: 0;
     border-radius: var(--radius-md);
     font-weight: 700;
     cursor: pointer;
 
     &:hover {
-      background: var(--brand-600);
+      background: var(--accent-surface-hover);
     }
 
     &:focus-visible {

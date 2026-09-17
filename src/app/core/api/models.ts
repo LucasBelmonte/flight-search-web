@@ -10,7 +10,7 @@
  * corrija o openapi.yaml, não crie uma interface paralela.
  */
 
-import type { components } from './types';
+import type { components, operations } from './types';
 
 type Schemas = components['schemas'];
 
@@ -26,11 +26,19 @@ export type Favorite = Schemas['Favorite'];
 export type RecentSearch = Schemas['RecentSearch'];
 export type ApiError = Schemas['Error'];
 
-/** Envelope de resposta da busca. */
-export interface FlightSearchResponse {
-  data: FlightOffer[];
-  meta: SearchMeta;
-}
+/**
+ * Envelopes de resposta, derivados das operações do contrato.
+ *
+ * Escrever `{ data, meta }` à mão compilaria igual hoje e deixaria de compilar
+ * em silêncio amanhã: se a API acrescentar paginação em /airports, um tipo local
+ * não referenciado pela operação continua verde e a divergência só aparece em
+ * runtime. Derivar da operação faz o erro surgir no build, que é onde ele serve.
+ */
+export type FlightSearchResponse =
+  operations['searchFlights']['responses'][200]['content']['application/json'];
+
+export type AirportSearchResponse =
+  operations['searchAirports']['responses'][200]['content']['application/json'];
 
 /** Códigos de erro que a API pode devolver. Ver openapi.yaml, schema Error. */
 export type ApiErrorCode = ApiError['error']['code'];

@@ -8,25 +8,25 @@
 label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--text);
 }
 
 input {
   min-height: var(--touch-target);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-interactive);
   border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--surface-raised);
+  color: var(--text);
 
   &:hover {
-    border-color: var(--brand-600);
+    border-color: var(--border-interactive);
   }
 
   &:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
-    border-color: var(--brand-600);
+    border-color: var(--border-interactive);
   }
 
   &[aria-invalid='true'] {
@@ -37,7 +37,7 @@ input {
 
 .hint {
   font-size: 0.75rem;
-  color: var(--ink-muted); /* 8.86:1 sobre branco */
+  color: var(--text-muted); /* 8.86:1 sobre branco */
 }
 
 ul {
@@ -51,7 +51,7 @@ ul {
   margin: 0;
   padding: var(--space-1);
   list-style: none;
-  background: var(--surface);
+  background: var(--surface-raised);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-raised);
@@ -68,13 +68,13 @@ li {
 
   &.active {
     /* Fundo verde da marca com texto preto: 9.64:1. */
-    background: var(--brand-500);
-    color: var(--ink);
+    background: var(--accent-surface);
+    color: var(--on-accent);
   }
 
   &.empty {
     cursor: default;
-    color: var(--ink-muted);
+    color: var(--text-muted);
   }
 }
 
@@ -94,14 +94,15 @@ li {
 
 .name {
   font-size: 0.75rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Na opção realçada o fundo é verde, então o texto secundário precisa do preto
-   para manter contraste — o cinza cairia para 3.9:1. */
+/* Na opção realçada o fundo é verde, então o texto secundário também precisa do
+   preto: o cinza cairia para 3.9:1, e no tema escuro --text é claro, o que sobre
+   o verde daria 2.2:1. --on-accent é preto nos dois temas. */
 li.active .name {
-  color: var(--ink);
+  color: var(--on-accent);
 }

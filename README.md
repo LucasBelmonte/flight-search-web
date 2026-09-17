@@ -2,7 +2,23 @@
 
 SPA de busca de passagens aéreas. Angular 22, standalone components, signals, SCSS.
 
-Consome a [Flight Search API](../flight-search-api). Cumpre **WCAG 2.1 nível AA**.
+Consome a [Flight Search API](https://github.com/LucasBelmonte/flight-search-api). Cumpre
+**WCAG 2.1 nível AA** nos temas claro e escuro.
+
+## Status
+
+> A interface está no ar, mas com **dados de exemplo**: o backend ainda não foi implementado, e a tela
+> avisa isso a quem visita. Os preços são fictícios.
+
+**Pronto:** busca completa (origem, destino, ida e volta, passageiros, cabine) · autocomplete de aeroporto
+como combobox ARIA · resultados ordenáveis · temas claro e escuro seguindo o sistema · 30 verificações de
+contraste nos dois temas · 42 testes · CI e deploy automáticos.
+
+**Pendente:** conectar à API real (trocar `useSampleData` para `false` quando o backend existir) ·
+autenticação e favoritos, já especificados no contrato · testes end-to-end com Playwright e axe-core.
+
+O backend é o caminho crítico: veja o status dele no
+[repositório da API](https://github.com/LucasBelmonte/flight-search-api).
 
 ## Rodando
 
@@ -56,26 +72,50 @@ precisa não existe, o contrato está incompleto: corrija-o lá.
 > dependency de TypeScript 5, e este projeto usa TypeScript 6 — rodar isolado evita forçar
 > `--legacy-peer-deps` no projeto inteiro por causa de uma ferramenta que só produz um arquivo.
 
+## Temas
+
+A aplicação tem tema claro e escuro. Ao abrir pela primeira vez ela **segue a preferência do sistema**
+(`prefers-color-scheme`), e o seletor no cabeçalho oferece três opções: Claro, Escuro e Sistema.
+
+"Sistema" é uma opção de primeira classe, não a ausência de escolha: quem alterna o tema do sistema ao
+anoitecer continua acompanhado, e a tela muda sem recarregar. A escolha explícita fica no `localStorage`;
+"sistema" não persiste nada, justamente para voltar a seguir o sistema.
+
+Um script inline no `index.html` aplica o tema antes de o CSS pintar. Sem ele, quem tem o sistema em claro
+mas escolheu o escuro veria a tela branca até o bundle carregar.
+
 ## Cores e contraste
 
-A marca é `#0BC977`, `#FFFFFF` e `#000000`. O verde sobre branco dá **2.18:1**, abaixo do mínimo de 4.5:1
-para texto e de 3:1 para bordas — então ele **não pode ser texto nem contorno sobre branco**. Como fundo
-com texto preto ele vai muito bem: 9.64:1.
+A marca é `#0BC977`, `#FFFFFF` e `#000000`. O ponto central é que **as regras do verde se invertem entre
+os temas**:
 
-| Token         | Hex       | Onde pode aparecer                    | Contraste |
-| ------------- | --------- | ------------------------------------- | --------- |
-| `--brand-500` | `#0BC977` | Só fundo. Texto em cima sempre preto  | 9.64:1    |
-| `--brand-600` | `#09A561` | Borda, anel de foco, ícone decorativo | 3.20:1    |
-| `--brand-700` | `#077A47` | Texto verde, link, ícone informativo  | 5.41:1    |
-| `--ink`       | `#000000` | Texto padrão                          | 21:1      |
-| `--surface`   | `#FFFFFF` | Fundo                                 | —         |
+|                         | tema claro                   | tema escuro                  |
+| ----------------------- | ---------------------------- | ---------------------------- |
+| `#0BC977` sobre o fundo | 2,18:1 ❌ não pode ser texto | 8,92:1 ✅ **pode ser texto** |
+| `#077A47` sobre o fundo | 5,41:1 ✅ é o texto verde    | 3,46:1 ❌ reprova            |
 
-`npm run check:contrast` mede cada par declarado e falha o build se algum reprovar. Ele também acusa hex
-literal fora de `src/styles/_tokens.scss`, porque hex literal burla a própria validação. O hook de
-PostToolUse roda isso a cada arquivo de estilo salvo.
+Por isso os componentes usam **tokens semânticos**, nunca a escala `--brand-*`:
+
+| Token                  | Para quê                 | Claro     | Escuro    |
+| ---------------------- | ------------------------ | --------- | --------- |
+| `--surface`            | Fundo da página          | `#FFFFFF` | `#0D0D0D` |
+| `--surface-raised`     | Card, dropdown, campo    | `#FFFFFF` | `#1E1E1E` |
+| `--text`               | Texto padrão             | `#000000` | `#EDEDED` |
+| `--text-muted`         | Texto secundário         | `#4A4A4A` | `#B0B0B0` |
+| `--text-accent`        | Texto e link de destaque | `#077A47` | `#0BC977` |
+| `--accent-surface`     | Fundo de botão primário  | `#0BC977` | `#0BC977` |
+| `--on-accent`          | Texto sobre accent       | `#000000` | `#000000` |
+| `--border-interactive` | Borda de campo           | `#09A561` | `#757575` |
+| `--focus-color`        | Anel de foco             | `#077A47` | `#0BC977` |
+| `--danger`             | Erro                     | `#B3261E` | `#FFB4AB` |
+
+`npm run check:contrast` mede cada par declarado **nos dois temas** — 30 verificações — e falha o build se
+alguma reprovar. Ele também acusa hex literal fora de `src/styles/_tokens.scss`, porque hex literal burla
+a própria validação. O hook de PostToolUse roda isso a cada arquivo de estilo salvo.
 
 Ao criar uma combinação nova de cores, registre-a em `PAIRS` dentro de `scripts/check-contrast.mjs` — par
-não declarado não é validado, e o que não é validado regride.
+não declarado não é validado, e o que não é validado regride. O fundo declarado precisa ser a superfície
+real: um input dentro de um card está sobre `--surface-raised`, não sobre `--surface`.
 
 ## Acessibilidade
 
@@ -88,6 +128,26 @@ combobox de aeroporto seguindo o padrão ARIA completo, com `aria-expanded`, `ar
 `aria-live`; descrição por extenso de cada trecho para leitor de tela; foco visível em tudo que é focável;
 alvos de toque de 44px; `prefers-reduced-motion` respeitado.
 
+## Desenvolvendo com agentes
+
+O diretório `.claude/` é **versionado**: ao clonar, você já recebe os agentes, as skills e os hooks. Com o
+Claude Code aberto neste repositório, tudo carrega sozinho.
+
+**Agentes** (`.claude/agents/`) — `planner` decide o escopo e muda o contrato antes do código;
+`frontend-coder` implementa; `test-engineer` cobre; `a11y-guardian` audita acessibilidade; `code-reviewer`
+revisa o diff; `git-publisher` abre o PR. Você não precisa chamá-los pelo nome: descreva a tarefa e o
+agente certo é acionado.
+
+**Skills** (`.claude/skills/`) — `angular-feature`, `design-tokens`, `api-contract` e `ship-pr` carregam
+sozinhas quando o trabalho toca a área correspondente, e também podem ser invocadas com `/design-tokens`.
+
+**Hooks** (`.claude/settings.json`) — bloqueiam leitura e escrita de `.env`, `git push --force`,
+`--no-verify` e commit direto na `main`; rodam Prettier e ESLint a cada arquivo salvo e, em arquivo de
+estilo, o validador de contraste, interrompendo se algum par reprovar.
+
+O guia completo da arquitetura, incluindo a cadeia de provedores e o fluxo entre os dois repositórios,
+está no README do diretório que contém os dois repos.
+
 ## Estrutura
 
 ```
@@ -97,5 +157,7 @@ src/app/
   app.ts               shell com cabeçalho, main e rodapé
 src/styles/_tokens.scss     a paleta — única fonte de cor do projeto
 scripts/check-contrast.mjs  validador WCAG
-.claude/                    agents, hooks e configuração de qualidade
+.claude/agents/             os agentes de desenvolvimento e revisão
+.claude/skills/             as receitas carregadas por contexto
+.claude/settings.json       hooks de qualidade e segurança
 ```
