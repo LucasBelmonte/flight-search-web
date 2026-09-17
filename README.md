@@ -2,7 +2,23 @@
 
 SPA de busca de passagens aéreas. Angular 22, standalone components, signals, SCSS.
 
-Consome a [Flight Search API](../flight-search-api). Cumpre **WCAG 2.1 nível AA**.
+Consome a [Flight Search API](https://github.com/LucasBelmonte/flight-search-api). Cumpre
+**WCAG 2.1 nível AA** nos temas claro e escuro.
+
+## Status
+
+> A interface está no ar, mas com **dados de exemplo**: o backend ainda não foi implementado, e a tela
+> avisa isso a quem visita. Os preços são fictícios.
+
+**Pronto:** busca completa (origem, destino, ida e volta, passageiros, cabine) · autocomplete de aeroporto
+como combobox ARIA · resultados ordenáveis · temas claro e escuro seguindo o sistema · 30 verificações de
+contraste nos dois temas · 42 testes · CI e deploy automáticos.
+
+**Pendente:** conectar à API real (trocar `useSampleData` para `false` quando o backend existir) ·
+autenticação e favoritos, já especificados no contrato · testes end-to-end com Playwright e axe-core.
+
+O backend é o caminho crítico: veja o status dele no
+[repositório da API](https://github.com/LucasBelmonte/flight-search-api).
 
 ## Rodando
 
