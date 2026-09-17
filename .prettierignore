@@ -1,0 +1,8 @@
+dist/
+.angular/
+node_modules/
+coverage/
+
+# Gerado por `npm run sync:api-types` — formatar aqui só cria ruído no diff,
+# porque a próxima sincronia reescreve o arquivo inteiro.
+src/app/core/api/types.ts

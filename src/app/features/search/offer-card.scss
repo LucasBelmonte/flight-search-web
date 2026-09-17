@@ -1,0 +1,165 @@
+article {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+
+  /* Fundo verde com texto preto: 9.64:1. O ícone e o texto existem porque a
+     cor sozinha não pode ser o único indicador (WCAG 1.4.1). */
+  background: var(--brand-500);
+  color: var(--ink);
+
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.body {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: var(--space-4);
+
+  @media (max-width: 40rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.itineraries {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.leg-label {
+  margin-bottom: var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.times {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.endpoint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.iata {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.06em;
+}
+
+.middle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 5rem;
+}
+
+.duration,
+.stops {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.line {
+  width: 100%;
+  height: 2px;
+  background: var(--border-subtle);
+  border-radius: 1px;
+}
+
+.carrier {
+  margin-top: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--border-subtle);
+
+  @media (max-width: 40rem) {
+    align-items: stretch;
+    padding-left: 0;
+    padding-top: var(--space-4);
+    border-left: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.scarcity {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--danger); /* 6.54:1 sobre branco */
+}
+
+.btn-select {
+  margin-top: var(--space-2);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-6);
+
+  /* Botão secundário: contorno em brand-600 (3.20:1, suficiente para
+     componente) com o rótulo em brand-700 (5.41:1, exigido para texto). */
+  background: var(--surface);
+  color: var(--brand-700);
+  border: 2px solid var(--brand-600);
+  border-radius: var(--radius-md);
+
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--brand-500);
+    color: var(--ink); /* no fundo verde o rótulo vira preto: 9.64:1 */
+    border-color: var(--brand-500);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+}

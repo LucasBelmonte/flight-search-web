@@ -1,1 +1,120 @@
-/* You can add global styles to this file, and also import other style files */
+@use './styles/tokens';
+
+/* -------------------------------------------------------------------------
+   Reset mínimo
+   ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+ul[class] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Foco visível
+
+   Nunca removemos o outline sem substituto. :focus-visible mostra o anel para
+   quem navega por teclado sem poluir o clique de mouse.
+   ------------------------------------------------------------------------- */
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* -------------------------------------------------------------------------
+   Utilitários de acessibilidade
+   ------------------------------------------------------------------------- */
+
+/* Visível só para leitor de tela. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Link "pular para o conteúdo": escondido até receber foco. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  padding: var(--space-3) var(--space-4);
+  background: var(--brand-500);
+  color: var(--ink); /* preto sobre verde — 9.64:1 */
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-120%);
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
+
+a {
+  color: var(--brand-700); /* 5.41:1 — nunca use brand-500 como texto */
+  text-decoration: underline; /* cor sozinha não distingue link (WCAG 1.4.1) */
+}
+
+/* -------------------------------------------------------------------------
+   Movimento reduzido
+   ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

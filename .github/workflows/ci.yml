@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Qualidade e testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          # O Angular 22 exige 24.15.0 ou superior.
+          node-version: '24.21.0'
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Formatação
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      # Roda separado do lint de propósito: contraste insuficiente é o tipo de
+      # defeito que ninguém enxerga olhando a tela, só medindo — e merece
+      # aparecer com nome próprio quando quebra.
+      - name: Contraste WCAG AA
+        run: npm run check:contrast
+
+      - name: Testes unitários
+        run: npm run test
+
+      - name: Build de produção
+        run: npm run build

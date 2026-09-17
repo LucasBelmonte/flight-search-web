@@ -1,0 +1,64 @@
+/**
+ * Design tokens — Flight Search
+ *
+ * A marca é #0BC977, #FFFFFF e #000000, e o sistema precisa cumprir WCAG 2.1 AA.
+ *
+ * O verde da marca sobre branco dá 2.18:1 — abaixo do mínimo de 4.5:1 para texto
+ * e do 3:1 para bordas. Ele funciona como FUNDO com texto preto (9.64:1). Por isso
+ * a escala abaixo tem dois tons mais escuros do mesmo matiz, para os casos em que
+ * o verde precisa ser texto ou contorno.
+ *
+ * Qualquer par novo precisa ser registrado em scripts/check-contrast.mjs — par não
+ * declarado não é validado, e o que não é validado regride.
+ */
+
+:root {
+  /* --- Marca ------------------------------------------------------------- */
+
+  /* Só superfície. Texto em cima: SEMPRE preto (9.64:1). */
+  --brand-500: #0bc977;
+
+  /* Borda, anel de foco, ícone decorativo sobre branco (3.20:1). */
+  --brand-600: #09a561;
+
+  /* Texto verde, link, ícone informativo sobre branco (5.41:1). */
+  --brand-700: #077a47;
+
+  /* --- Neutros ----------------------------------------------------------- */
+
+  --ink: #000000; /* texto padrão — 21:1 sobre branco */
+  --ink-muted: #4a4a4a; /* texto secundário — 8.86:1 */
+  --surface: #ffffff;
+  --surface-sunken: #f7f7f7; /* fundo de seção, sem exigência de contraste */
+  --border-subtle: #d4d4d4; /* separador não-informativo */
+
+  /* --- Semânticos -------------------------------------------------------- */
+
+  --danger: #b3261e; /* 6.54:1 sobre branco */
+
+  /* --- Forma ------------------------------------------------------------- */
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Alvo de toque mínimo (WCAG 2.5.5). */
+  --touch-target: 44px;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 12%);
+  --shadow-raised: 0 4px 12px rgb(0 0 0 / 16%);
+
+  /* Anel de foco: brand-700 garante 3:1 contra branco. Nunca use brand-500 aqui. */
+  --focus-ring: 3px solid var(--brand-700);
+  --focus-offset: 2px;
+}
