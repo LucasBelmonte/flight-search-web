@@ -1,6 +1,6 @@
 article {
   overflow: hidden;
-  background: var(--surface);
+  background: var(--surface-raised);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -14,8 +14,8 @@ article {
 
   /* Fundo verde com texto preto: 9.64:1. O ícone e o texto existem porque a
      cor sozinha não pode ser o único indicador (WCAG 1.4.1). */
-  background: var(--brand-500);
-  color: var(--ink);
+  background: var(--accent-surface);
+  color: var(--on-accent);
 
   font-size: 0.8125rem;
   font-weight: 700;
@@ -47,7 +47,7 @@ article {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .times {
@@ -71,7 +71,7 @@ article {
 .iata {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--ink-muted);
+  color: var(--text-muted);
   letter-spacing: 0.06em;
 }
 
@@ -87,7 +87,7 @@ article {
 .duration,
 .stops {
   font-size: 0.75rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .line {
@@ -100,7 +100,7 @@ article {
 .carrier {
   margin-top: var(--space-2);
   font-size: 0.8125rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .price {
@@ -128,7 +128,7 @@ article {
 
 .note {
   font-size: 0.75rem;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 .scarcity {
@@ -144,18 +144,18 @@ article {
 
   /* Botão secundário: contorno em brand-600 (3.20:1, suficiente para
      componente) com o rótulo em brand-700 (5.41:1, exigido para texto). */
-  background: var(--surface);
-  color: var(--brand-700);
-  border: 2px solid var(--brand-600);
+  background: var(--surface-raised);
+  color: var(--text-accent);
+  border: 2px solid var(--border-interactive);
   border-radius: var(--radius-md);
 
   font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    background: var(--brand-500);
-    color: var(--ink); /* no fundo verde o rótulo vira preto: 9.64:1 */
-    border-color: var(--brand-500);
+    background: var(--accent-surface);
+    color: var(--on-accent); /* no fundo verde o rótulo vira preto: 9.64:1 */
+    border-color: var(--accent-surface);
   }
 
   &:focus-visible {

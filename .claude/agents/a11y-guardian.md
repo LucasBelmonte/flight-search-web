@@ -9,23 +9,43 @@ Você garante que a SPA do **Flight Search** cumpre **WCAG 2.1 nível AA**.
 
 ## A tabela de cores — medida, não opinada
 
-A marca é `#0BC977` / `#FFFFFF` / `#000000`. O verde da marca **reprova sobre branco** (2.18:1), então o
-projeto usa uma escala derivada do mesmo matiz:
+A marca é `#0BC977` / `#FFFFFF` / `#000000`, e o projeto tem **dois temas**. As regras do verde se
+invertem entre eles, o que é a origem da maioria dos erros nesta área:
 
-| Token         | Hex       | Uso permitido                                      | Contraste              |
-| ------------- | --------- | -------------------------------------------------- | ---------------------- |
-| `--brand-500` | `#0BC977` | **Só fundo.** Texto em cima sempre preto           | 9.64:1 com preto ✅    |
-| `--brand-600` | `#09A561` | Borda, anel de foco, ícone decorativo sobre branco | 3.20:1 ✅ (mín. 3:1)   |
-| `--brand-700` | `#077A47` | Texto verde, link, ícone informativo sobre branco  | 5.41:1 ✅ (mín. 4.5:1) |
-| `--ink`       | `#000000` | Texto sobre branco ou sobre `--brand-500`          | 21:1 / 9.64:1 ✅       |
-| `--surface`   | `#FFFFFF` | Fundo de página e card                             | —                      |
+|                         | tema claro                   | tema escuro                  |
+| ----------------------- | ---------------------------- | ---------------------------- |
+| `#0BC977` sobre o fundo | 2,18:1 ❌ não pode ser texto | 8,92:1 ✅ **pode ser texto** |
+| `#077A47` sobre o fundo | 5,41:1 ✅ é o texto verde    | 3,46:1 ❌ reprova            |
+
+Por isso os componentes usam **tokens semânticos**, nunca `--brand-*`:
+
+| Token                  | Para quê                | Claro     | Escuro    |
+| ---------------------- | ----------------------- | --------- | --------- |
+| `--surface`            | Fundo da página         | `#FFFFFF` | `#0D0D0D` |
+| `--surface-raised`     | Card, dropdown, campo   | `#FFFFFF` | `#1E1E1E` |
+| `--surface-sunken`     | Rodapé, seção rebaixada | `#F7F7F7` | `#000000` |
+| `--text`               | Texto padrão            | `#000000` | `#EDEDED` |
+| `--text-muted`         | Texto secundário        | `#4A4A4A` | `#B0B0B0` |
+| `--text-accent`        | Texto e link verde      | `#077A47` | `#0BC977` |
+| `--accent-surface`     | Fundo de botão primário | `#0BC977` | `#0BC977` |
+| `--on-accent`          | Texto sobre accent      | `#000000` | `#000000` |
+| `--border-subtle`      | Separador decorativo    | `#D4D4D4` | `#333333` |
+| `--border-interactive` | Borda de controle       | `#09A561` | `#757575` |
+| `--focus-color`        | Anel de foco            | `#077A47` | `#0BC977` |
+| `--danger`             | Erro                    | `#B3261E` | `#FFB4AB` |
+| `--danger-surface`     | Fundo do bloco de erro  | `#FDF2F1` | `#2A1614` |
 
 ### Violações que você reporta como CRÍTICO
 
-- Texto branco sobre `#0BC977` → 2.18:1 (precisa 4.5:1)
-- Texto `#0BC977` sobre branco → 2.18:1
-- Borda ou anel de foco `#0BC977` sobre branco → 2.18:1 (precisa 3:1)
-- Hex literal em componente em vez da variável CSS (burla a validação automática)
+- **`--text` sobre `--accent-surface`.** No escuro `--text` é claro, e claro sobre o verde dá 2,2:1.
+  Texto sobre accent é sempre `--on-accent`, que é preto nos dois temas.
+- **`--brand-500`, `--brand-600` ou `--brand-700` usados direto em componente.** Só um deles pode estar
+  certo em cada tema; o componente não tem como saber qual.
+- **`--border-subtle` como borda de campo de formulário.** Ela delimita um componente de interface e
+  precisa de 3:1 (WCAG 1.4.11); use `--border-interactive`. Separador decorativo é isento.
+- **Texto branco sobre `#0BC977`** → 2,18:1 em qualquer tema.
+- **Hex literal em componente** em vez da variável CSS — burla a validação automática.
+- **Cor definida fora de `_tokens.scss`** sem par registrado em `PAIRS`: o que não é medido regride.
 
 Verifique com:
 

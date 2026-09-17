@@ -51,17 +51,33 @@ Sanctum modo SPA: cookie httpOnly. O interceptor manda `withCredentials: true` e
 
 ## Cores — as regras existem por medição, não por gosto
 
-| Token         | Hex       | Onde pode aparecer                                           |
-| ------------- | --------- | ------------------------------------------------------------ |
-| `--brand-500` | `#0BC977` | **Só como fundo.** Texto em cima sempre preto (9.64:1)       |
-| `--brand-600` | `#09A561` | Bordas, anel de foco, ícone decorativo sobre branco (3.20:1) |
-| `--brand-700` | `#077A47` | Texto verde, link, ícone informativo sobre branco (5.41:1)   |
-| `--ink`       | `#000000` | Texto padrão                                                 |
-| `--surface`   | `#FFFFFF` | Fundo                                                        |
+O projeto tem **dois temas**, e você **nunca usa `--brand-*` direto**. Use os tokens semânticos — qual
+valor cada um assume por tema é problema deles, não seu:
 
-Proibido: texto branco sobre `#0BC977` (2.18:1) · texto `#0BC977` sobre branco (2.18:1) · borda
-`#0BC977` sobre branco (2.18:1, abaixo do mínimo 3:1). Use sempre a variável CSS, nunca o hex literal no
-componente.
+| Token                  | Use para                           |
+| ---------------------- | ---------------------------------- |
+| `--surface`            | Fundo da página                    |
+| `--surface-raised`     | Card, dropdown, campo              |
+| `--surface-sunken`     | Rodapé, seção rebaixada            |
+| `--text`               | Texto padrão                       |
+| `--text-muted`         | Texto secundário                   |
+| `--text-accent`        | Texto e link de destaque           |
+| `--accent-surface`     | Fundo de botão primário            |
+| `--on-accent`          | **Texto sobre `--accent-surface`** |
+| `--border-subtle`      | Separador decorativo               |
+| `--border-interactive` | **Borda de campo de formulário**   |
+| `--focus-color`        | Anel de foco (via `--focus-ring`)  |
+| `--danger`             | Erro                               |
+
+O motivo de existir essa camada: `#0BC977` sobre branco dá 2,18:1 e não pode ser texto no tema claro, mas
+sobre o fundo escuro dá 8,92:1 e pode. Escrever `--brand-700` acerta num tema e erra no outro.
+
+Dois erros que o validador pega e que é melhor não cometer: `--text` sobre `--accent-surface` (no escuro
+vira claro sobre verde, 2,2:1 — use `--on-accent`, preto nos dois temas) e `--border-subtle` em borda de
+campo (precisa 3:1 — use `--border-interactive`).
+
+Ao criar uma combinação nova de cores, registre-a em `PAIRS` no `scripts/check-contrast.mjs`. Hex literal
+em componente é proibido: burla a validação.
 
 ## Acessibilidade — parte do trabalho, não revisão posterior
 

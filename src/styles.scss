@@ -19,7 +19,7 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
-  color: var(--ink);
+  color: var(--text);
   background: var(--surface);
 }
 
@@ -88,8 +88,8 @@ ul[class] {
   left: 0;
   z-index: 100;
   padding: var(--space-3) var(--space-4);
-  background: var(--brand-500);
-  color: var(--ink); /* preto sobre verde — 9.64:1 */
+  background: var(--accent-surface);
+  color: var(--on-accent); /* preto sobre verde — 9.64:1 */
   font-weight: 600;
   text-decoration: none;
   transform: translateY(-120%);
@@ -100,7 +100,7 @@ ul[class] {
 }
 
 a {
-  color: var(--brand-700); /* 5.41:1 — nunca use brand-500 como texto */
+  color: var(--text-accent); /* 5.41:1 — nunca use brand-500 como texto */
   text-decoration: underline; /* cor sozinha não distingue link (WCAG 1.4.1) */
 }
 

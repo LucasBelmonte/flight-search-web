@@ -1,44 +1,118 @@
 /**
  * Design tokens — Flight Search
  *
- * A marca é #0BC977, #FFFFFF e #000000, e o sistema precisa cumprir WCAG 2.1 AA.
+ * A marca é #0BC977, #FFFFFF e #000000, e o sistema cumpre WCAG 2.1 AA nos dois
+ * temas.
  *
- * O verde da marca sobre branco dá 2.18:1 — abaixo do mínimo de 4.5:1 para texto
- * e do 3:1 para bordas. Ele funciona como FUNDO com texto preto (9.64:1). Por isso
- * a escala abaixo tem dois tons mais escuros do mesmo matiz, para os casos em que
- * o verde precisa ser texto ou contorno.
+ * ## Por que existe uma camada semântica
  *
- * Qualquer par novo precisa ser registrado em scripts/check-contrast.mjs — par não
- * declarado não é validado, e o que não é validado regride.
+ * As regras do verde se INVERTEM entre os temas, e isso não é detalhe:
+ *
+ *   claro:  #0BC977 sobre branco = 2.18:1  → não pode ser texto
+ *           #077A47 sobre branco = 5.41:1  → este é o texto verde
+ *
+ *   escuro: #0BC977 sobre #0D0D0D = 8.92:1 → aqui ele PODE ser texto
+ *           #077A47 sobre #0D0D0D = 3.46:1 → e este reprova
+ *
+ * Se os componentes usassem a escala bruta (--brand-500, --brand-700), cada um
+ * precisaria saber em que tema está. Em vez disso eles usam tokens semânticos
+ * (--text-accent, --focus-color), e é a troca de tema que redefine o valor.
+ *
+ * Regra prática: componente nunca referencia --brand-*. Use os semânticos.
+ *
+ * Todo par novo precisa ser registrado em scripts/check-contrast.mjs, que mede
+ * os DOIS temas e falha o build se algum reprovar.
  */
 
+/* --------------------------------------------------------------------------
+   Escala bruta da marca — referência. Não use direto em componente.
+   -------------------------------------------------------------------------- */
 :root {
-  /* --- Marca ------------------------------------------------------------- */
-
-  /* Só superfície. Texto em cima: SEMPRE preto (9.64:1). */
-  --brand-500: #0bc977;
-
-  /* Borda, anel de foco, ícone decorativo sobre branco (3.20:1). */
+  --brand-500: #0bc977; /* a cor da marca */
   --brand-600: #09a561;
-
-  /* Texto verde, link, ícone informativo sobre branco (5.41:1). */
   --brand-700: #077a47;
+}
 
-  /* --- Neutros ----------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   Tema claro (padrão)
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
 
-  --ink: #000000; /* texto padrão — 21:1 sobre branco */
-  --ink-muted: #4a4a4a; /* texto secundário — 8.86:1 */
   --surface: #ffffff;
-  --surface-sunken: #f7f7f7; /* fundo de seção, sem exigência de contraste */
-  --border-subtle: #d4d4d4; /* separador não-informativo */
+  --surface-raised: #ffffff; /* card */
+  --surface-sunken: #f7f7f7; /* rodapé, seção rebaixada */
 
-  /* --- Semânticos -------------------------------------------------------- */
+  --text: #000000; /* 21:1 sobre surface */
+  --text-muted: #4a4a4a; /* 8.86:1 */
+  --text-accent: #077a47; /* 5.41:1 — o verde que pode ser texto aqui */
 
-  --danger: #b3261e; /* 6.54:1 sobre branco */
-  --danger-surface: #fdf2f1; /* fundo do bloco de erro; texto --ink dá 19.3:1 */
+  --accent-surface: #0bc977; /* fundo de botão primário */
+  --accent-surface-hover: #09a561;
+  --on-accent: #000000; /* 9.64:1 sobre o verde */
 
-  /* --- Forma ------------------------------------------------------------- */
+  --border-subtle: #d4d4d4; /* separador decorativo, isento de 3:1 */
+  --border-interactive: #09a561; /* 3.20:1 — borda de input */
 
+  --focus-color: #077a47; /* 5.41:1 */
+
+  --danger: #b3261e; /* 6.54:1 */
+  --danger-surface: #fdf2f1;
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 12%);
+  --shadow-raised: 0 4px 12px rgb(0 0 0 / 16%);
+}
+
+/* --------------------------------------------------------------------------
+   Tema escuro
+
+   Definido uma vez no mixin e aplicado em dois seletores: o da preferência do
+   sistema e o da escolha explícita do usuário.
+   -------------------------------------------------------------------------- */
+@mixin dark-theme {
+  color-scheme: dark;
+
+  --surface: #0d0d0d;
+  --surface-raised: #1e1e1e;
+  --surface-sunken: #000000;
+
+  --text: #ededed; /* 16.60:1 sobre surface */
+  --text-muted: #b0b0b0; /* 8.96:1 */
+  --text-accent: #0bc977; /* 8.92:1 — aqui a cor da marca vira texto */
+
+  --accent-surface: #0bc977; /* o botão continua verde com texto preto */
+  --accent-surface-hover: #09a561;
+  --on-accent: #000000; /* 9.64:1 — independe do tema */
+
+  --border-subtle: #333333;
+  --border-interactive: #757575; /* 3:1 contra a superfície do card */
+
+  --focus-color: #0bc977; /* 8.92:1 */
+
+  --danger: #ffb4ab; /* o #B3261E do claro dá 2.87:1 aqui e reprova */
+  --danger-surface: #2a1614;
+
+  /* Sombra quase não aparece sobre fundo escuro; a separação vem da borda. */
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 40%);
+  --shadow-raised: 0 4px 12px rgb(0 0 0 / 55%);
+}
+
+/* Preferência do sistema — vale quando o usuário não escolheu explicitamente. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark-theme;
+  }
+}
+
+/* Escolha explícita do usuário vence a preferência do sistema. */
+:root[data-theme='dark'] {
+  @include dark-theme;
+}
+
+/* --------------------------------------------------------------------------
+   Forma e espaçamento — não mudam com o tema
+   -------------------------------------------------------------------------- */
+:root {
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
@@ -56,10 +130,6 @@
 
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  --shadow-card: 0 1px 3px rgb(0 0 0 / 12%);
-  --shadow-raised: 0 4px 12px rgb(0 0 0 / 16%);
-
-  /* Anel de foco: brand-700 garante 3:1 contra branco. Nunca use brand-500 aqui. */
-  --focus-ring: 3px solid var(--brand-700);
+  --focus-ring: 3px solid var(--focus-color);
   --focus-offset: 2px;
 }

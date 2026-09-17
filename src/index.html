@@ -10,6 +10,30 @@
     <meta name="description" content="Compare passagens aéreas por origem, destino e data." />
     <meta name="theme-color" content="#0BC977" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!--
+      Aplica o tema escolhido antes de o CSS pintar a página.
+
+      Sem isto existe um flash: quem tem o sistema em claro mas escolheu o tema
+      escuro veria a tela branca até o bundle Angular carregar e corrigir. A
+      preferência do sistema sozinha não precisa de JS — `prefers-color-scheme`
+      já resolve —, então este script só trata da escolha explícita.
+
+      Mantido inline e minúsculo de propósito: ele precisa rodar antes de
+      qualquer pintura, e um arquivo externo adicionaria uma ida à rede.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('fs-theme');
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (e) {
+          /* armazenamento bloqueado: a preferência do sistema assume */
+        }
+      })();
+    </script>
   </head>
   <body>
     <fs-root></fs-root>
