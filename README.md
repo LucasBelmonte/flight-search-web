@@ -88,6 +88,26 @@ combobox de aeroporto seguindo o padrão ARIA completo, com `aria-expanded`, `ar
 `aria-live`; descrição por extenso de cada trecho para leitor de tela; foco visível em tudo que é focável;
 alvos de toque de 44px; `prefers-reduced-motion` respeitado.
 
+## Desenvolvendo com agentes
+
+O diretório `.claude/` é **versionado**: ao clonar, você já recebe os agentes, as skills e os hooks. Com o
+Claude Code aberto neste repositório, tudo carrega sozinho.
+
+**Agentes** (`.claude/agents/`) — `planner` decide o escopo e muda o contrato antes do código;
+`frontend-coder` implementa; `test-engineer` cobre; `a11y-guardian` audita acessibilidade; `code-reviewer`
+revisa o diff; `git-publisher` abre o PR. Você não precisa chamá-los pelo nome: descreva a tarefa e o
+agente certo é acionado.
+
+**Skills** (`.claude/skills/`) — `angular-feature`, `design-tokens`, `api-contract` e `ship-pr` carregam
+sozinhas quando o trabalho toca a área correspondente, e também podem ser invocadas com `/design-tokens`.
+
+**Hooks** (`.claude/settings.json`) — bloqueiam leitura e escrita de `.env`, `git push --force`,
+`--no-verify` e commit direto na `main`; rodam Prettier e ESLint a cada arquivo salvo e, em arquivo de
+estilo, o validador de contraste, interrompendo se algum par reprovar.
+
+O guia completo da arquitetura, incluindo a cadeia de provedores e o fluxo entre os dois repositórios,
+está no README do diretório que contém os dois repos.
+
 ## Estrutura
 
 ```
@@ -97,5 +117,7 @@ src/app/
   app.ts               shell com cabeçalho, main e rodapé
 src/styles/_tokens.scss     a paleta — única fonte de cor do projeto
 scripts/check-contrast.mjs  validador WCAG
-.claude/                    agents, hooks e configuração de qualidade
+.claude/agents/             os agentes de desenvolvimento e revisão
+.claude/skills/             as receitas carregadas por contexto
+.claude/settings.json       hooks de qualidade e segurança
 ```
